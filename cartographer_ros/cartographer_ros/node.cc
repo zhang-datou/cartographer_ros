@@ -20,6 +20,7 @@
 #include <string>
 #include <vector>
 
+#include <geometry_msgs/Pose2D.h>
 #include "Eigen/Core"
 #include "absl/memory/memory.h"
 #include "absl/strings/str_cat.h"
@@ -44,6 +45,7 @@
 #include "nav_msgs/Odometry.h"
 #include "ros/serialization.h"
 #include "sensor_msgs/PointCloud2.h"
+#include "tf/transform_broadcaster.h"
 #include "tf2_eigen/tf2_eigen.h"
 #include "visualization_msgs/MarkerArray.h"
 
@@ -215,6 +217,7 @@ void Node::AddSensorSamplers(const int trajectory_id,
 
 void Node::PublishLocalTrajectoryData(const ::ros::TimerEvent& timer_event) {
   absl::MutexLock lock(&mutex_);
+  _pose_pub = node_handle_.advertise<geometry_msgs::Pose2D>("pose_nav", 10);
   for (const auto& entry : map_builder_bridge_.GetLocalTrajectoryData()) {
     const auto& trajectory_data = entry.second;
 
@@ -270,6 +273,8 @@ void Node::PublishLocalTrajectoryData(const ::ros::TimerEvent& timer_event) {
     const Rigid3d tracking_to_map =
         trajectory_data.local_to_map * tracking_to_local;
 
+    geometry_msgs::Pose2D pos_now;
+
     if (trajectory_data.published_to_tracking != nullptr) {
       if (trajectory_data.trajectory_options.provide_odom_frame) {
         std::vector<geometry_msgs::TransformStamped> stamped_transforms;
@@ -290,6 +295,15 @@ void Node::PublishLocalTrajectoryData(const ::ros::TimerEvent& timer_event) {
         stamped_transforms.push_back(stamped_transform);
 
         tf_broadcaster_.sendTransform(stamped_transforms);
+
+        geometry_msgs::Transform transform = ToGeometryMsgTransform(
+            tracking_to_map * (*trajectory_data.published_to_tracking));
+
+        pos_now.x = static_cast<double>(transform.translation.x);
+        pos_now.y = static_cast<double>(transform.translation.y);
+        // printf("x:%f y:%f\n", pos_now.x, pos_now.y);
+        pos_now.theta = tf::getYaw(transform.rotation);
+        _pose_pub.publish(pos_now);
       } else {
         stamped_transform.header.frame_id = node_options_.map_frame;
         stamped_transform.child_frame_id =
