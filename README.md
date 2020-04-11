@@ -1,13 +1,4 @@
-<!--
- * @Descripttion: 
- * @version: 
- * @Author: Zhangjianqing
- * @Date: 2020-03-01 19:15:05
- * @LastEditors: Zhangjianqing
- * @LastEditTime: 2020-03-21 22:43:27
- -->
- 
- 本人小白，项目中使用cartographer进行机器人的定位。cartographer_ros中没有发布机器人在地图坐标系中的位姿topic，只发布各frame间的tf变换。若通过tf变换获取位姿坐标，测试发现不管激光频率多高（20~100hz），获取的位姿频率只有5h左右。因此对源码进行简单修改，获取高频率的位姿topic并在rviz中根据机器人当前位置进行重定位。
+本人小白，项目中使用cartographer进行机器人的定位。cartographer_ros中没有发布机器人在地图坐标系中的位姿topic，只发布各frame间的tf变换。若通过tf变换获取位姿坐标，测试发现不管激光频率多高（20~100hz），获取的位姿频率只有5h左右。因此对源码进行简单修改，获取高频率的位姿topic并在rviz中根据机器人当前位置进行重定位。
 
  ## 准备工作
  
